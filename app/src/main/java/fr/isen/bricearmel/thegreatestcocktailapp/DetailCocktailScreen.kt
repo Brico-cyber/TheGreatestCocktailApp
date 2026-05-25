@@ -6,8 +6,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -21,6 +23,7 @@ import retrofit2.Response
 fun DetailCocktailScreen(drinkId: String? = null) {
     val context = LocalContext.current
     var drink by remember { mutableStateOf<Drink?>(null) }
+    var isFavorite by remember { mutableStateOf(false) }
 
     LaunchedEffect(drinkId) {
         val call = if (drinkId != null) {
@@ -31,6 +34,7 @@ fun DetailCocktailScreen(drinkId: String? = null) {
         call.enqueue(object : Callback<CocktailResponse> {
             override fun onResponse(call: Call<CocktailResponse>, response: Response<CocktailResponse>) {
                 drink = response.body()?.drinks?.firstOrNull()
+                drink?.let { isFavorite = FavoritesManager.isFavorite(context, it.idDrink) }
             }
             override fun onFailure(call: Call<CocktailResponse>, t: Throwable) {
                 Toast.makeText(context, "Erreur réseau", Toast.LENGTH_SHORT).show()
@@ -44,9 +48,22 @@ fun DetailCocktailScreen(drinkId: String? = null) {
                 title = { Text(drink?.strDrink ?: "Chargement...") },
                 actions = {
                     IconButton(onClick = {
-                        Toast.makeText(context, "${drink?.strDrink} ajouté aux favoris !", Toast.LENGTH_SHORT).show()
+                        drink?.let {
+                            if (isFavorite) {
+                                FavoritesManager.removeFavorite(context, it)
+                                isFavorite = false
+                                Toast.makeText(context, "${it.strDrink} retiré des favoris", Toast.LENGTH_SHORT).show()
+                            } else {
+                                FavoritesManager.addFavorite(context, it)
+                                isFavorite = true
+                                Toast.makeText(context, "${it.strDrink} ajouté aux favoris !", Toast.LENGTH_SHORT).show()
+                            }
+                        }
                     }) {
-                        Icon(Icons.Filled.Favorite, contentDescription = "Favorite")
+                        Icon(
+                            if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                            contentDescription = "Favorite"
+                        )
                     }
                 }
             )
@@ -54,7 +71,7 @@ fun DetailCocktailScreen(drinkId: String? = null) {
     ) { padding ->
         if (drink == null) {
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-                CircularProgressIndicator(modifier = Modifier.align(androidx.compose.ui.Alignment.Center))
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
         } else {
             Column(
