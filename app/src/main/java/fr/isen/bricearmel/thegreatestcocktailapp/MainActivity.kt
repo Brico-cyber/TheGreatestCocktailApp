@@ -4,9 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Scaffold
-import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import fr.isen.bricearmel.thegreatestcocktailapp.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
@@ -15,7 +15,18 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
-                DetailCocktailScreen()
+                val navController = rememberNavController()
+                NavHost(navController = navController, startDestination = "categories") {
+                    composable("categories") {
+                        CategoriesScreen(onCategoryClick = { category ->
+                            navController.navigate("detail/$category")
+                        })
+                    }
+                    composable("detail/{category}") { backStackEntry ->
+                        val category = backStackEntry.arguments?.getString("category") ?: ""
+                        DetailCocktailScreen(category = category)
+                    }
+                }
             }
         }
     }
