@@ -19,12 +19,21 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = "categories") {
                     composable("categories") {
                         CategoriesScreen(onCategoryClick = { category ->
-                            navController.navigate("detail/$category")
+                            navController.navigate("drinks/$category")
                         })
                     }
-                    composable("detail/{category}") { backStackEntry ->
+                    composable("drinks/{category}") { backStackEntry ->
                         val category = backStackEntry.arguments?.getString("category") ?: ""
-                        DetailCocktailScreen(category = category)
+                        DrinksScreen(
+                            category = category,
+                            onDrinkClick = { drinkId ->
+                                navController.navigate("detail/$drinkId")
+                            }
+                        )
+                    }
+                    composable("detail/{drinkId}") { backStackEntry ->
+                        val drinkId = backStackEntry.arguments?.getString("drinkId") ?: ""
+                        DetailCocktailScreen(drinkId = drinkId)
                     }
                 }
             }
